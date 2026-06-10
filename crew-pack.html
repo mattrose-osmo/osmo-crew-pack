@@ -416,7 +416,7 @@ async function loadPack() {
   show('loading');
 
   // Dev mode: if no API_URL set, use embedded demo data
-  if (API_URL === 'https://script.google.com/a/macros/osmoprojects.com/s/AKfycbxpKKfdlFXOYeTx-qubnoqyhFeQNcaaW69Ng392wZJCp-ngGCTdGsGOXIFp7F3C6zdWdg/exec') {
+  if (false) { // dev mode disabled
     renderPack(DEMO_DATA);
     return;
   }
@@ -437,30 +437,61 @@ async function loadPack() {
 function renderPack(data) {
   const { meta, coverMeta, sections } = data;
 
-  // Cover
-  const titleParts = (meta.documentTitle || '').split(' ');
-  const lastWord   = titleParts.pop();
-  document.getElementById('cover-title').innerHTML =
-    titleParts.join('<br>') + (titleParts.length ? '<br><em>' : '<em>') + lastWord + '</em>';
+  // Cover title — coverTitle is the project name (H2 in Doc, e.g. "LAY'S FWC\rDINNER & SHOW 2026")
+  // documentTitle is the generic label ("PROJECT INFORMATION PACK") used in the eyebrow
+  const rawTitle = meta.coverTitle || meta.documentTitle || meta.title || '';
 
-  if (meta.projectCode) {
-    document.getElementById('cover-eyebrow').textContent =
-      'Project information pack · ' + meta.projectCode;
+  // If the title has \r or \n (multi-line in Doc), respect those breaks
+  // Otherwise split into lines of max 2 words for big cover display
+  let lines;
+  if (/[\r\n]/.test(rawTitle)) {
+    lines = rawTitle.split(/\r\n|\r|\n/).map(l => l.trim()).filter(Boolean);
+  } else {
+    lines = [];
+    const words = rawTitle.trim().split(/\s+/);
+    for (let i = 0; i < words.length; i += 2) {
+      lines.push(words.slice(i, i + 2).join(' '));
+    }
   }
 
+  // Make last word on last line coral
+  const lastLine = lines.pop() || '';
+  const lastLineParts = lastLine.split(' ');
+  const colorWord = lastLineParts.pop();
+  const remainder = lastLineParts.join(' ');
+  const lastLineHtml = (remainder ? remainder + ' ' : '') + `<em>${escHtml(colorWord)}</em>`;
+  lines.push(lastLineHtml);
+  document.getElementById('cover-title').innerHTML = lines.map((l, i) =>
+    i < lines.length - 1 ? escHtml(l) : l
+  ).join('<br>');
+
+  // Eyebrow — generic doc title + project code
+  const eyebrowBase = meta.documentTitle || 'Project information pack';
+  const eyebrowText = eyebrowBase + (meta.projectCode ? ' · ' + meta.projectCode : '');
+  document.getElementById('cover-eyebrow').textContent = eyebrowText;
+
+  // Cover meta — flexible matching so labels like "Agency", "Client" etc.
+  // are found regardless of what other text surrounds them in the key
   const metaEl = document.getElementById('cover-meta');
   const metaFields = [
-    ['agency', 'Agency'],
-    ['client', 'Client'],
-    ['venue', 'Venue'],
-    ['live_dates', 'Live dates'],
-    ['dates', 'Dates'],
-    ['osmo_role', 'OSMO role'],
-    ['issued', 'Issued'],
+    [['agency'], 'Agency'],
+    [['client'], 'Client'],
+    [['venue'], 'Venue'],
+    [['live_date', 'live_dates'], 'Live dates'],
+    [['date'], 'Dates'],
+    [['osmo_role', 'role'], 'OSMO role'],
+    [['issued'], 'Issued'],
+    [['project_code', 'project'], 'Project'],
   ];
-  metaFields.forEach(([key, label]) => {
-    if (coverMeta[key]) {
-      metaEl.innerHTML += `<div class="cover-meta-item">${label}<strong>${coverMeta[key]}</strong></div>`;
+  const usedKeys = new Set();
+  metaFields.forEach(([keyVariants, label]) => {
+    // Find the first coverMeta key that contains any of our variants
+    const match = Object.keys(coverMeta).find(k =>
+      !usedKeys.has(k) && keyVariants.some(v => k.includes(v))
+    );
+    if (match && coverMeta[match]) {
+      usedKeys.add(match);
+      metaEl.innerHTML += `<div class="cover-meta-item">${label}<strong>${escHtml(coverMeta[match])}</strong></div>`;
     }
   });
 
