@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crew Pack Editor — OSMO</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --coral:   #fb4357;
+  --dark:    #111111;
+  --mid:     #333333;
+  --muted:   #888888;
+  --border:  #e5e5e5;
+  --surface: #f7f7f5;
+  --white:   #ffffff;
+  --radius:  10px;
+}
+body {
+  font-family: 'Open Sans', sans-serif;
+  font-size: 14px;
+  color: var(--dark);
+  background: var(--surface);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── TOP BAR ───────────────────────────────────────────── */
+.topbar {
+  background: var(--dark);
+  color: var(--white);
+  padding: 0 1.5rem;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+.topbar-logo {
+  width: 22px; height: 22px;
+  background: var(--coral);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.topbar-logo::after {
+  content: '';
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  border: 2.5px solid var(--dark);
+}
+.topbar-project {
+  font-size: 12px;
+  color: #999;
+}
+.topbar-project strong {
+  color: var(--white);
+  font-weight: 600;
+}
+.topbar-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.btn { font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 20px; cursor: pointer; border: none; }
+.btn-ghost { background: rgba(255,255,255,0.1); color: var(--white); }
+.btn-ghost:hover { background: rgba(255,255,255,0.18); }
+.btn-coral { background: var(--coral); color: var(--white); }
+.btn-coral:hover { opacity: 0.9; }
+.btn-outline-dark { background: transparent; color: var(--mid); border: 1px solid var(--border); }
+.btn-outline-dark:hover { border-color: var(--coral); color: var(--coral); }
+.sync-status { font-size: 11px; color: #666; display: flex; align-items: center; gap: 5px; }
+.sync-dot { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; flex-shrink: 0; }
+.sync-dot.syncing { background: #facc15; animation: pulse 1s infinite; }
+.sync-dot.error { background: #f87171; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* ── LAYOUT ────────────────────────────────────────────── */
+.layout { display: grid; grid-template-columns: 320px 1fr; min-height: calc(100vh - 48px); }
+.sidebar { background: var(--white); border-right: 1px solid var(--border); overflow-y: auto; }
+.preview-pane { background: var(--surface); display: flex; flex-direction: column; align-items: center; padding: 1.5rem; }
+
+/* ── SIDEBAR ────────────────────────────────────────────── */
+.sidebar-head {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sidebar-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+
+.meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+.meta-cell { background: var(--surface); border-radius: 8px; padding: 7px 10px; }
+.meta-cell-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 2px; }
+.meta-cell-val { font-size: 12px; font-weight: 600; color: var(--dark); }
+
+.section-list { padding: 8px; }
+.section-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 5px;
+  background: var(--white);
+  transition: border-color 0.15s;
+  cursor: default;
+}
+.section-item.selected { border-color: var(--coral); }
+.section-item.hidden { opacity: 0.5; }
+
+.section-item-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  cursor: pointer;
+}
+.drag-handle {
+  color: var(--muted);
+  font-size: 16px;
+  cursor: grab;
+  line-height: 1;
+  padding: 0 2px;
+}
+.drag-handle:active { cursor: grabbing; }
+.section-num { font-size: 10px; font-weight: 700; color: var(--muted); min-width: 20px; }
+.section-item-title { font-size: 12px; font-weight: 600; color: var(--dark); flex: 1; }
+.section-item-meta { font-size: 10px; color: var(--muted); }
+.chevron-btn { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 12px; padding: 2px; transition: transform 0.15s; }
+.chevron-btn.open { transform: rotate(180deg); }
+
+.toggle-btn {
+  width: 32px; height: 18px;
+  border-radius: 9px;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+.toggle-btn.on { background: var(--coral); }
+.toggle-btn.off { background: var(--border); }
+.toggle-btn::after {
+  content: '';
+  position: absolute;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--white);
+  top: 3px;
+  transition: left 0.2s;
+}
+.toggle-btn.on::after { left: 17px; }
+.toggle-btn.off::after { left: 3px; }
+
+.section-item-body {
+  border-top: 1px solid var(--border);
+  padding: 8px 10px 8px 38px;
+  display: none;
+}
+.section-item-body.open { display: block; }
+
+.subsec-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+}
+.subsec-row:last-child { border-bottom: none; }
+.subsec-name { flex: 1; color: var(--dark); }
+.subsec-type { font-size: 10px; color: var(--muted); }
+
+.custom-title-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+.custom-title-row input {
+  flex: 1;
+  font-size: 11px;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--dark);
+  font-family: inherit;
+}
+.custom-title-row input:focus { outline: none; border-color: var(--coral); }
+.custom-title-row label { font-size: 10px; color: var(--muted); white-space: nowrap; }
+
+.add-section-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  background: none;
+  color: var(--muted);
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  margin-top: 4px;
+}
+.add-section-btn:hover { border-color: var(--coral); color: var(--coral); }
+
+/* ── PREVIEW PANE ─────────────────────────────────────── */
+.preview-frame {
+  width: 390px;
+  height: 720px;
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 0 0 8px var(--dark), 0 24px 40px rgba(0,0,0,0.25);
+  overflow: hidden;
+  background: var(--white);
+}
+.preview-label {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+  margin-bottom: 12px;
+}
+.preview-actions {
+  margin-top: 16px;
+  display: flex;
+  gap: 8px;
+}
+
+/* ── SAVE BAR ─────────────────────────────────────────── */
+.save-bar {
+  position: sticky;
+  bottom: 0;
+  background: var(--white);
+  border-top: 1px solid var(--border);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+}
+.unsaved-badge {
+  background: rgba(251,67,87,0.1);
+  color: var(--coral);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+</style>
+</head>
+<body>
+
+<!-- ── TOP BAR ─────────────────────────────────────────────── -->
+<div class="topbar">
+  <div class="topbar-logo"></div>
+  <div class="topbar-project">
+    OSMO Crew Pack · <strong id="project-name">Loading…</strong>
+  </div>
+  <div class="topbar-actions">
+    <div class="sync-status">
+      <div class="sync-dot" id="sync-dot"></div>
+      <span id="sync-label">Syncing…</span>
+    </div>
+    <button class="btn btn-ghost" onclick="syncFromDoc()">↻ Sync Doc</button>
+    <button class="btn btn-coral" onclick="saveAndPublish()">Save & publish</button>
+  </div>
+</div>
+
+<!-- ── MAIN LAYOUT ─────────────────────────────────────────── -->
+<div class="layout">
+
+  <!-- LEFT: Editor sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-head">
+      <span class="sidebar-label">Sections</span>
+      <span class="sidebar-label" id="section-count">—</span>
+    </div>
+
+    <div class="meta-grid" id="meta-grid"></div>
+
+    <div class="section-list" id="section-list"></div>
+
+    <div style="padding: 0 8px 8px;">
+      <button class="add-section-btn" onclick="addCustomSection()">
+        + Add custom section
+      </button>
+    </div>
+
+    <div class="save-bar">
+      <span class="unsaved-badge" id="unsaved-badge" style="display:none;">Unsaved changes</span>
+      <button class="btn btn-outline-dark" style="margin-left:auto;" onclick="discardChanges()">Discard</button>
+      <button class="btn btn-coral" onclick="saveConfig()">Save</button>
+    </div>
+  </div>
+
+  <!-- RIGHT: Preview pane -->
+  <div class="preview-pane">
+    <div class="preview-label">Crew view preview</div>
+    <iframe class="preview-frame" id="preview-frame" src="crew-pack.html" title="Crew pack preview"></iframe>
+    <div class="preview-actions">
+      <button class="btn btn-outline-dark" onclick="openCrewView()">Open full crew view ↗</button>
+      <button class="btn btn-outline-dark" onclick="document.getElementById('preview-frame').contentWindow.location.reload()">↻ Refresh</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────
+// Same URL as crew-pack.html — this editor calls ?action=raw and ?action=config
+const API_URL = 'https://script.google.com/a/macros/osmoprojects.com/s/AKfycbxpKKfdlFXOYeTx-qubnoqyhFeQNcaaW69Ng392wZJCp-ngGCTdGsGOXIFp7F3C6zdWdg/exec';
+const CREW_PACK_URL = 'crew-pack.html'; // adjust if hosting separately
+
+// ── STATE ─────────────────────────────────────────────────────
+let docData     = null;   // raw parsed doc from ?action=raw
+let config      = null;   // section config from ?action=config
+let hasChanges  = false;
+
+// ── BOOT ─────────────────────────────────────────────────────
+async function init() {
+  setSyncStatus('syncing', 'Loading…');
+
+  // Dev mode demo
+  if (API_URL === 'https://script.google.com/a/macros/osmoprojects.com/s/AKfycbxpKKfdlFXOYeTx-qubnoqyhFeQNcaaW69Ng392wZJCp-ngGCTdGsGOXIFp7F3C6zdWdg/exec') {
+    docData = DEMO_RAW;
+    config  = buildDefaultConfig(DEMO_RAW.sections);
+    render();
+    setSyncStatus('ok', 'Demo mode');
+    return;
+  }
+
+  try {
+    const [rawResp, cfgResp] = await Promise.all([
+      fetch(API_URL + '?action=raw'),
+      fetch(API_URL + '?action=config'),
+    ]);
+    docData = await rawResp.json();
+    const cfgData = await cfgResp.json();
+
+    config = (cfgData.sections && cfgData.sections.length)
+      ? cfgData
+      : buildDefaultConfig(docData.sections);
+
+    render();
+    setSyncStatus('ok', 'Synced just now');
+  } catch (err) {
+    setSyncStatus('error', 'Sync failed: ' + err.message);
+  }
+}
+
+async function syncFromDoc() {
+  setSyncStatus('syncing', 'Syncing…');
+  try {
+    const resp = await fetch(API_URL + '?action=raw');
+    docData = await resp.json();
+    // Preserve existing config but add any new sections
+    mergeNewSections(docData.sections);
+    render();
+    setSyncStatus('ok', 'Synced just now');
+    markChanged();
+  } catch (err) {
+    setSyncStatus('error', 'Sync failed');
+  }
+}
+
+// ── RENDER ────────────────────────────────────────────────────
+function render() {
+  const { meta, coverMeta, sections } = docData;
+
+  document.getElementById('project-name').textContent =
+    (meta.projectCode ? meta.projectCode + ' — ' : '') + (meta.documentTitle || 'Untitled');
+
+  // Meta grid
+  const metaGrid = document.getElementById('meta-grid');
+  metaGrid.innerHTML = '';
+  const metaFields = [
+    ['agency', 'Agency'], ['client', 'Client'],
+    ['dates', 'Dates'], ['issued', 'Issued'],
+    ['live_dates', 'Live dates'],
+  ];
+  metaFields.forEach(([key, label]) => {
+    if (coverMeta && coverMeta[key]) {
+      metaGrid.innerHTML += `
+        <div class="meta-cell">
+          <div class="meta-cell-label">${label}</div>
+          <div class="meta-cell-val">${esc(coverMeta[key])}</div>
+        </div>`;
+    }
+  });
+
+  // Section list
+  renderSectionList();
+}
+
+function renderSectionList() {
+  const list = document.getElementById('section-list');
+  list.innerHTML = '';
+
+  // Build ordered list from config
+  const ordered = getOrderedSections();
+
+  document.getElementById('section-count').textContent = ordered.length + ' sections';
+
+  ordered.forEach((cfgSection, displayIdx) => {
+    const docSection = docData.sections.find(s => s.id === cfgSection.id);
+    const subsections = docSection ? docSection.subsections : [];
+
+    const item = document.createElement('div');
+    item.className = 'section-item' + (cfgSection.visible === false ? ' hidden' : '');
+    item.dataset.id = cfgSection.id;
+
+    const numStr = String(displayIdx + 1).padStart(2, '0');
+    const toggleOn = cfgSection.visible !== false;
+    const subsecCount = subsections.length;
+    const contentType = docSection
+      ? describeSection(docSection)
+      : 'custom';
+
+    item.innerHTML = `
+      <div class="section-item-head" onclick="toggleExpand('${cfgSection.id}')">
+        <span class="drag-handle" title="drag to reorder">⠿</span>
+        <span class="section-num">${numStr}</span>
+        <span class="section-item-title">${esc(cfgSection.customTitle || (docSection && docSection.title) || cfgSection.id)}</span>
+        <span class="section-item-meta">${subsecCount ? subsecCount + ' sub' : contentType}</span>
+        <button class="chevron-btn" id="chev-${cfgSection.id}" onclick="event.stopPropagation();toggleExpand('${cfgSection.id}')">▾</button>
+        <button class="toggle-btn ${toggleOn ? 'on' : 'off'}" id="toggle-${cfgSection.id}"
+          onclick="event.stopPropagation();toggleVisible('${cfgSection.id}')" 
+          title="${toggleOn ? 'Visible — click to hide' : 'Hidden — click to show'}"></button>
+      </div>
+      <div class="section-item-body" id="body-${cfgSection.id}">
+        <div class="custom-title-row">
+          <label>Label</label>
+          <input type="text" placeholder="${esc((docSection && docSection.title) || cfgSection.id)}"
+            value="${esc(cfgSection.customTitle || '')}"
+            oninput="setCustomTitle('${cfgSection.id}', this.value)" />
+        </div>
+        ${subsections.map(ss => {
+          const ssCfg = (cfgSection.subsections || []).find(s => s.id === ss.id) || {};
+          const ssOn  = ssCfg.visible !== false;
+          return `
+          <div class="subsec-row">
+            <span class="subsec-name">${esc(ss.title)}</span>
+            <span class="subsec-type">${esc(describeSubsection(ss))}</span>
+            <button class="toggle-btn ${ssOn ? 'on' : 'off'}" id="sstoggle-${ss.id}"
+              onclick="toggleSubsecVisible('${cfgSection.id}','${ss.id}')"
+              title="${ssOn ? 'Visible' : 'Hidden'}"></button>
+          </div>`;
+        }).join('')}
+      </div>`;
+
+    list.appendChild(item);
+  });
+
+  initDragAndDrop();
+}
+
+// ── INTERACTIONS ──────────────────────────────────────────────
+function toggleExpand(sectionId) {
+  const body = document.getElementById('body-' + sectionId);
+  const chev = document.getElementById('chev-' + sectionId);
+  const isOpen = body.classList.contains('open');
+  // Close all
+  document.querySelectorAll('.section-item-body').forEach(b => b.classList.remove('open'));
+  document.querySelectorAll('.chevron-btn').forEach(c => c.classList.remove('open'));
+  // Open this one if it was closed
+  if (!isOpen) {
+    body.classList.add('open');
+    chev.classList.add('open');
+  }
+}
+
+function toggleVisible(sectionId) {
+  const cfg = config.sections.find(s => s.id === sectionId);
+  if (!cfg) return;
+  cfg.visible = cfg.visible === false ? true : false;
+  const btn = document.getElementById('toggle-' + sectionId);
+  const item = btn.closest('.section-item');
+  btn.className = 'toggle-btn ' + (cfg.visible ? 'on' : 'off');
+  item.classList.toggle('hidden', !cfg.visible);
+  markChanged();
+}
+
+function toggleSubsecVisible(sectionId, subsecId) {
+  const cfg = config.sections.find(s => s.id === sectionId);
+  if (!cfg) return;
+  if (!cfg.subsections) cfg.subsections = [];
+  let ssCfg = cfg.subsections.find(s => s.id === subsecId);
+  if (!ssCfg) { ssCfg = { id: subsecId, visible: true, order: 0 }; cfg.subsections.push(ssCfg); }
+  ssCfg.visible = ssCfg.visible === false ? true : false;
+  const btn = document.getElementById('sstoggle-' + subsecId);
+  if (btn) btn.className = 'toggle-btn ' + (ssCfg.visible ? 'on' : 'off');
+  markChanged();
+}
+
+function setCustomTitle(sectionId, value) {
+  const cfg = config.sections.find(s => s.id === sectionId);
+  if (cfg) { cfg.customTitle = value || null; markChanged(); }
+}
+
+function addCustomSection() {
+  const title = prompt('Section title:');
+  if (!title) return;
+  const id = title.toLowerCase().replace(/[^a-z0-9]/g, '-');
+  config.sections.push({ id, customTitle: title, visible: true, order: config.sections.length, subsections: [], _custom: true });
+  markChanged();
+  renderSectionList();
+}
+
+// ── DRAG AND DROP ─────────────────────────────────────────────
+function initDragAndDrop() {
+  const list = document.getElementById('section-list');
+  let dragging = null;
+
+  list.querySelectorAll('.section-item').forEach(item => {
+    item.draggable = true;
+
+    item.addEventListener('dragstart', e => {
+      dragging = item;
+      setTimeout(() => item.style.opacity = '0.4', 0);
+    });
+    item.addEventListener('dragend', () => {
+      item.style.opacity = '';
+      dragging = null;
+      updateOrderFromDOM();
+      markChanged();
+    });
+    item.addEventListener('dragover', e => {
+      e.preventDefault();
+      if (!dragging || dragging === item) return;
+      const rect = item.getBoundingClientRect();
+      const after = e.clientY > rect.top + rect.height / 2;
+      list.insertBefore(dragging, after ? item.nextSibling : item);
+    });
+  });
+}
+
+function updateOrderFromDOM() {
+  const items = document.querySelectorAll('#section-list .section-item');
+  items.forEach((item, idx) => {
+    const cfg = config.sections.find(s => s.id === item.dataset.id);
+    if (cfg) cfg.order = idx;
+  });
+}
+
+// ── CONFIG MANAGEMENT ─────────────────────────────────────────
+function buildDefaultConfig(sections) {
+  return {
+    sections: sections.map((s, i) => ({
+      id:          s.id,
+      visible:     true,
+      order:       i,
+      customTitle: null,
+      subsections: (s.subsections || []).map((ss, j) => ({
+        id: ss.id, visible: true, order: j,
+      })),
+    })),
+  };
+}
+
+function mergeNewSections(newSections) {
+  const existingIds = new Set(config.sections.map(s => s.id));
+  let maxOrder = Math.max(...config.sections.map(s => s.order || 0), 0);
+  newSections.forEach(s => {
+    if (!existingIds.has(s.id)) {
+      config.sections.push({ id: s.id, visible: true, order: ++maxOrder, customTitle: null, subsections: [] });
+    }
+  });
+}
+
+function getOrderedSections() {
+  return [...config.sections].sort((a, b) => (a.order || 0) - (b.order || 0));
+}
+
+async function saveConfig() {
+  if (API_URL === 'https://script.google.com/a/macros/osmoprojects.com/s/AKfycbxpKKfdlFXOYeTx-qubnoqyhFeQNcaaW69Ng392wZJCp-ngGCTdGsGOXIFp7F3C6zdWdg/exec') {
+    clearChanged();
+    alert('Config saved (demo mode — no actual API call).');
+    return;
+  }
+  setSyncStatus('syncing', 'Saving…');
+  try {
+    await fetch(API_URL + '?action=config', {
+      method: 'POST',
+      body: JSON.stringify(config),
+      headers: { 'Content-Type': 'application/json' },
+    });
+    clearChanged();
+    setSyncStatus('ok', 'Saved');
+  } catch (err) {
+    setSyncStatus('error', 'Save failed');
+  }
+}
+
+async function saveAndPublish() {
+  await saveConfig();
+  const frame = document.getElementById('preview-frame');
+  frame.contentWindow.location.reload();
+}
+
+function discardChanges() {
+  if (!confirm('Discard unsaved changes?')) return;
+  init();
+  clearChanged();
+}
+
+function openCrewView() {
+  window.open(CREW_PACK_URL, '_blank');
+}
+
+// ── UI HELPERS ────────────────────────────────────────────────
+function setSyncStatus(state, label) {
+  const dot = document.getElementById('sync-dot');
+  const lbl = document.getElementById('sync-label');
+  dot.className = 'sync-dot' + (state === 'syncing' ? ' syncing' : state === 'error' ? ' error' : '');
+  lbl.textContent = label;
+}
+
+function markChanged() {
+  hasChanges = true;
+  document.getElementById('unsaved-badge').style.display = '';
+}
+
+function clearChanged() {
+  hasChanges = false;
+  document.getElementById('unsaved-badge').style.display = 'none';
+}
+
+function describeSection(s) {
+  const types = new Set();
+  (s.content || []).forEach(b => types.add(b.type));
+  return [...types].join(', ') || 'empty';
+}
+
+function describeSubsection(ss) {
+  const types = new Set();
+  (ss.content || []).forEach(b => types.add(b.type));
+  return [...types].join(', ') || 'empty';
+}
+
+function esc(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── DEMO DATA ─────────────────────────────────────────────────
+const DEMO_RAW = {
+  meta: { documentTitle: 'SXSW London 2026', projectCode: '2614', syncedAt: new Date().toISOString() },
+  coverMeta: { agency: 'TAIT', client: 'Panarise', dates: '27 May – 07 June 2026', issued: 'v1.2 · 26 May 2026' },
+  sections: [
+    { id: 'event-overview', title: 'Event overview', content: [{ type: 'table', rows: [] }], subsections: [
+      { id: 'background', title: 'Background', content: [{ type: 'para', text: '…' }] },
+      { id: 'event-at-a-glance', title: 'Event at a glance', content: [{ type: 'table', rows: [] }] },
+    ]},
+    { id: 'key-dates-milestones', title: 'Key dates & milestones', content: [{ type: 'table', rows: [] }], subsections: [] },
+    { id: 'venue', title: 'Venue', content: [{ type: 'table', rows: [] }], subsections: [
+      { id: 'site-notes', title: 'Site notes', content: [{ type: 'listItem', text: '…' }] },
+    ]},
+    { id: 'accommodation', title: 'Accommodation', content: [{ type: 'table', rows: [] }], subsections: [] },
+    { id: 'schedules', title: 'Schedules', content: [{ type: 'table', rows: [] }], subsections: [] },
+    { id: 'on-site', title: 'On site', content: [], subsections: [
+      { id: 'what-to-wear', title: 'What to wear', content: [{ type: 'listItem', text: '…' }] },
+      { id: 'radios-communications', title: 'Radios & comms', content: [{ type: 'table', rows: [] }] },
+      { id: 'access-accreditation', title: 'Access & accreditation', content: [{ type: 'table', rows: [] }] },
+      { id: 'expenses', title: 'Expenses', content: [{ type: 'listItem', text: '…' }] },
+      { id: 'brand-representation', title: 'Brand representation', content: [{ type: 'listItem', text: '…' }] },
+      { id: 'social-media', title: 'Social media', content: [{ type: 'listItem', text: '…' }] },
+    ]},
+    { id: 'suppliers-contractors', title: 'Suppliers & contractors', content: [{ type: 'table', rows: [] }], subsections: [] },
+    { id: 'health-safety', title: 'Health & safety', content: [{ type: 'para', text: '…' }], subsections: [] },
+    { id: 'emergency-procedures', title: 'Emergency procedures', content: [{ type: 'para', text: '…' }], subsections: [] },
+  ],
+};
+
+init();
+</script>
+</body>
+</html>

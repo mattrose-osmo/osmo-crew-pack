@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OSMO Crew Pack</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* ── RESET & BASE ─────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --coral:   #fb4357;
+  --dark:    #111111;
+  --mid:     #333333;
+  --muted:   #888888;
+  --border:  #e5e5e5;
+  --surface: #f7f7f5;
+  --white:   #ffffff;
+  --radius:  10px;
+  --max-w:   680px;
+}
+html { font-size: 16px; }
+body {
+  font-family: 'Open Sans', sans-serif;
+  font-size: 14px;
+  color: var(--dark);
+  background: var(--surface);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── LAYOUT ───────────────────────────────────────────── */
+.page { max-width: var(--max-w); margin: 0 auto; padding: 0 0 4rem; }
+
+/* ── COVER ────────────────────────────────────────────── */
+.cover {
+  background: var(--dark);
+  color: var(--white);
+  padding: 2rem 1.5rem 1.75rem;
+  position: relative;
+  overflow: hidden;
+}
+.cover::after {
+  content: '';
+  position: absolute;
+  right: -20px; top: -20px;
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  border: 2px solid rgba(251,67,87,0.15);
+}
+.cover-osmo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 1.5rem;
+}
+.cover-osmo-o {
+  width: 32px; height: 32px;
+  background: var(--coral);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.cover-osmo-o::after {
+  content: '';
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  border: 3.5px solid var(--dark);
+}
+.cover-eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--coral);
+  font-weight: 600;
+}
+.cover-title {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 900;
+  font-size: clamp(32px, 8vw, 52px);
+  line-height: 0.92;
+  text-transform: uppercase;
+  color: var(--white);
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.01em;
+}
+.cover-title em { color: var(--coral); font-style: normal; }
+.cover-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 20px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding-top: 1rem;
+}
+.cover-meta-item { font-size: 11px; color: var(--muted); }
+.cover-meta-item strong { display: block; font-size: 13px; color: var(--white); font-weight: 600; margin-top: 1px; }
+.cover-badge {
+  position: absolute;
+  top: 1.5rem; right: 1.5rem;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--coral);
+  border: 1px solid rgba(251,67,87,0.25);
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+/* ── NAV ──────────────────────────────────────────────── */
+.nav-wrap {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+}
+.nav {
+  display: flex;
+  overflow-x: auto;
+  gap: 0;
+  padding: 0 1rem;
+  scrollbar-width: none;
+}
+.nav::-webkit-scrollbar { display: none; }
+.nav-item {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 11px 14px 10px;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  transition: color 0.15s;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  outline: none;
+}
+.nav-item.active { color: var(--coral); border-bottom-color: var(--coral); }
+.nav-item:hover:not(.active) { color: var(--dark); }
+
+/* ── SECTION ──────────────────────────────────────────── */
+.section { display: none; padding: 1.25rem 1rem; }
+.section.active { display: block; }
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1rem;
+}
+.section-num {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--coral);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.section-title {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 900;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--dark);
+}
+
+/* ── CONTENT BLOCKS ───────────────────────────────────── */
+.prose { font-size: 13px; color: var(--mid); line-height: 1.7; margin-bottom: 0.75rem; }
+
+.kv-table { width: 100%; border-collapse: collapse; margin-bottom: 0.75rem; }
+.kv-table tr { border-bottom: 1px solid var(--border); }
+.kv-table tr:last-child { border-bottom: none; }
+.kv-table td { padding: 7px 0; font-size: 13px; vertical-align: top; }
+.kv-table td:first-child { color: var(--muted); width: 38%; font-size: 12px; }
+.kv-table td:last-child { font-weight: 600; color: var(--dark); text-align: right; }
+
+.data-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 0.75rem; overflow: hidden; border-radius: var(--radius); border: 1px solid var(--border); }
+.data-table th { background: var(--dark); color: var(--white); padding: 7px 10px; text-align: left; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
+.data-table td { padding: 7px 10px; border-bottom: 1px solid var(--border); color: var(--mid); vertical-align: top; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:nth-child(even) td { background: var(--surface); }
+
+.list-block { margin-bottom: 0.75rem; }
+.list-item {
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--mid);
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+  line-height: 1.5;
+}
+.list-item:last-child { border-bottom: none; }
+.list-item::before { content: '—'; color: var(--coral); flex-shrink: 0; font-weight: 700; }
+
+.h3-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--coral);
+  margin: 1rem 0 0.4rem;
+}
+
+/* ── SUBSECTION ───────────────────────────────────────── */
+.subsection { margin-bottom: 1.25rem; }
+.subsection-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── CARD GRID (for suppliers, zones, etc.) ───────────── */
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-bottom: 0.75rem; }
+.card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+}
+.card-name { font-size: 12px; font-weight: 700; color: var(--dark); margin-bottom: 2px; }
+.card-sub { font-size: 11px; color: var(--muted); }
+.card-note { font-size: 10px; color: var(--coral); font-weight: 600; margin-top: 3px; }
+
+/* ── TIMELINE ─────────────────────────────────────────── */
+.timeline { padding-left: 1.25rem; border-left: 2px solid var(--border); }
+.tl-item { position: relative; padding: 0 0 1rem 0.75rem; }
+.tl-item:last-child { padding-bottom: 0; }
+.tl-dot {
+  position: absolute;
+  left: -0.85rem; top: 4px;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--white);
+}
+.tl-dot.live { border-color: var(--coral); background: var(--coral); }
+.tl-dot.dismantle { border-color: var(--muted); background: var(--muted); }
+.tl-date { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
+.tl-phase {
+  display: inline-block;
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 2px 6px; border-radius: 10px;
+  margin-right: 4px;
+}
+.phase-build { background: #f1efe8; color: #5f5e5a; }
+.phase-live  { background: rgba(251,67,87,0.1); color: var(--coral); }
+.phase-dis   { background: #f1f1f1; color: var(--muted); }
+.tl-text { font-size: 12px; color: var(--mid); line-height: 1.5; }
+
+/* ── DRESS CODE GRID ──────────────────────────────────── */
+.dress-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 0.75rem; }
+.dress-card { background: var(--surface); border-radius: var(--radius); padding: 12px; }
+.dress-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--coral); margin-bottom: 6px; }
+.dress-item { font-size: 12px; color: var(--mid); display: flex; gap: 6px; align-items: flex-start; padding: 2px 0; }
+.dress-item::before { content: '—'; color: var(--muted); flex-shrink: 0; }
+
+/* ── ALERT / HIGHLIGHT BLOCK ──────────────────────────── */
+.alert {
+  background: rgba(251,67,87,0.07);
+  border-left: 3px solid var(--coral);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--mid);
+  margin-bottom: 0.75rem;
+  line-height: 1.6;
+}
+.alert strong { color: var(--dark); }
+
+/* ── LINK BLOCK ───────────────────────────────────────── */
+.link-block {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  text-decoration: none;
+  margin-bottom: 6px;
+}
+.link-block-icon { font-size: 18px; color: var(--muted); flex-shrink: 0; }
+.link-block-label { font-size: 12px; font-weight: 700; color: var(--dark); }
+.link-block-url { font-size: 11px; color: var(--muted); word-break: break-all; }
+.link-block-arrow { margin-left: auto; color: var(--muted); }
+
+/* ── BOTTOM BAR ───────────────────────────────────────── */
+.bottom-bar {
+  position: sticky;
+  bottom: 0;
+  background: var(--white);
+  border-top: 1px solid var(--border);
+  padding: 10px 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--muted);
+}
+.bottom-bar-actions { display: flex; gap: 8px; }
+.btn-outline {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--white);
+  color: var(--mid);
+  cursor: pointer;
+  text-decoration: none;
+}
+.btn-outline:hover { border-color: var(--coral); color: var(--coral); }
+
+/* ── LOADING / ERROR ──────────────────────────────────── */
+.state-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 40vh;
+  color: var(--muted);
+  gap: 12px;
+  font-size: 13px;
+}
+.spinner {
+  width: 28px; height: 28px;
+  border: 2px solid var(--border);
+  border-top-color: var(--coral);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media print {
+  .nav-wrap, .bottom-bar { display: none; }
+  .section { display: block !important; }
+  .section-header { border-bottom: 2px solid var(--dark); }
+}
+</style>
+</head>
+<body>
+
+<!-- ── LOADING STATE ─────────────────────────────────────── -->
+<div id="loading" class="state-screen">
+  <div class="spinner"></div>
+  <span>Loading crew pack…</span>
+</div>
+
+<!-- ── ERROR STATE ───────────────────────────────────────── -->
+<div id="error" class="state-screen" style="display:none;">
+  <span style="font-size:24px;">⚠</span>
+  <span id="error-msg">Could not load crew pack.</span>
+  <button class="btn-outline" onclick="loadPack()">Retry</button>
+</div>
+
+<!-- ── MAIN CONTENT ──────────────────────────────────────── -->
+<div id="app" style="display:none;" class="page">
+
+  <div class="cover" id="cover">
+    <div class="cover-osmo">
+      <div class="cover-osmo-o"></div>
+      <span class="cover-eyebrow" id="cover-eyebrow">Project information pack</span>
+    </div>
+    <div class="cover-badge" id="cover-badge">Confidential — OSMO only</div>
+    <div class="cover-title" id="cover-title"></div>
+    <div class="cover-meta" id="cover-meta"></div>
+  </div>
+
+  <div class="nav-wrap">
+    <nav class="nav" id="nav" role="tablist" aria-label="Pack sections"></nav>
+  </div>
+
+  <main id="sections"></main>
+
+  <div class="bottom-bar">
+    <span id="footer-label">OSMO Projects</span>
+    <div class="bottom-bar-actions">
+      <button class="btn-outline" onclick="window.print()">Print / PDF</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ───────────────────────────────────────────────────
+// Replace this with your deployed Apps Script web app URL
+const API_URL = 'https://script.google.com/a/macros/osmoprojects.com/s/AKfycbxpKKfdlFXOYeTx-qubnoqyhFeQNcaaW69Ng392wZJCp-ngGCTdGsGOXIFp7F3C6zdWdg/exec';
+
+// ── RENDERER MAP ─────────────────────────────────────────────
+// Special rendering logic keyed by section ID (slug).
+// Any section not listed here gets the default renderer.
+const SPECIAL_RENDERERS = {
+  'key-dates-milestones': renderTimeline,
+  'suppliers-contractors': renderSupplierGrid,
+  'on-site': renderOnSite,
+};
+
+// ── BOOT ─────────────────────────────────────────────────────
+async function loadPack() {
+  show('loading');
+
+  // Dev mode: if no API_URL set, use embedded demo data
+  if (API_URL === 'https://script.google.com/a/macros/osmoprojects.com/s/AKfycbxpKKfdlFXOYeTx-qubnoqyhFeQNcaaW69Ng392wZJCp-ngGCTdGsGOXIFp7F3C6zdWdg/exec') {
+    renderPack(DEMO_DATA);
+    return;
+  }
+
+  try {
+    const resp = await fetch(API_URL + '?action=pack');
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error);
+    renderPack(data);
+  } catch (err) {
+    document.getElementById('error-msg').textContent = 'Could not load pack: ' + err.message;
+    show('error');
+  }
+}
+
+// ── RENDER PACK ───────────────────────────────────────────────
+function renderPack(data) {
+  const { meta, coverMeta, sections } = data;
+
+  // Cover
+  const titleParts = (meta.documentTitle || '').split(' ');
+  const lastWord   = titleParts.pop();
+  document.getElementById('cover-title').innerHTML =
+    titleParts.join('<br>') + (titleParts.length ? '<br><em>' : '<em>') + lastWord + '</em>';
+
+  if (meta.projectCode) {
+    document.getElementById('cover-eyebrow').textContent =
+      'Project information pack · ' + meta.projectCode;
+  }
+
+  const metaEl = document.getElementById('cover-meta');
+  const metaFields = [
+    ['agency', 'Agency'],
+    ['client', 'Client'],
+    ['venue', 'Venue'],
+    ['live_dates', 'Live dates'],
+    ['dates', 'Dates'],
+    ['osmo_role', 'OSMO role'],
+    ['issued', 'Issued'],
+  ];
+  metaFields.forEach(([key, label]) => {
+    if (coverMeta[key]) {
+      metaEl.innerHTML += `<div class="cover-meta-item">${label}<strong>${coverMeta[key]}</strong></div>`;
+    }
+  });
+
+  // Footer
+  const syncDate = new Date(meta.syncedAt);
+  document.getElementById('footer-label').textContent =
+    'OSMO Projects · ' + meta.documentTitle + ' · synced ' + syncDate.toLocaleDateString('en-GB');
+
+  // Nav + Sections
+  const nav      = document.getElementById('nav');
+  const main     = document.getElementById('sections');
+  nav.innerHTML  = '';
+  main.innerHTML = '';
+
+  sections.forEach((section, idx) => {
+    // Nav tab
+    const btn = document.createElement('button');
+    btn.className   = 'nav-item' + (idx === 0 ? ' active' : '');
+    btn.textContent = section.title;
+    btn.setAttribute('role', 'tab');
+    btn.setAttribute('aria-selected', idx === 0 ? 'true' : 'false');
+    btn.onclick = () => switchSection(idx, sections.length);
+    nav.appendChild(btn);
+
+    // Section panel
+    const panel = document.createElement('section');
+    panel.id        = 'sec-' + idx;
+    panel.className = 'section' + (idx === 0 ? ' active' : '');
+    panel.setAttribute('role', 'tabpanel');
+
+    // Section header
+    const numStr = String(idx + 1).padStart(2, '0');
+    panel.innerHTML = `
+      <div class="section-header">
+        <span class="section-num">${numStr}</span>
+        <span class="section-title">${section.title}</span>
+      </div>
+    `;
+
+    // Render content
+    const renderer = SPECIAL_RENDERERS[section.id] || renderDefault;
+    renderer(panel, section);
+
+    main.appendChild(panel);
+  });
+
+  show('app');
+}
+
+// ── SECTION SWITCH ────────────────────────────────────────────
+function switchSection(idx, total) {
+  for (let i = 0; i < total; i++) {
+    const panel = document.getElementById('sec-' + i);
+    const tab   = document.querySelectorAll('.nav-item')[i];
+    if (!panel) continue;
+    if (i === idx) {
+      panel.classList.add('active');
+      tab.classList.add('active');
+      tab.setAttribute('aria-selected', 'true');
+    } else {
+      panel.classList.remove('active');
+      tab.classList.remove('active');
+      tab.setAttribute('aria-selected', 'false');
+    }
+  }
+  // Scroll nav tab into view
+  document.querySelectorAll('.nav-item')[idx]?.scrollIntoView({ inline: 'nearest', behavior: 'smooth' });
+}
+
+// ── DEFAULT RENDERER ──────────────────────────────────────────
+function renderDefault(panel, section) {
+  // Direct section content
+  renderContentBlocks(panel, section.content);
+
+  // Subsections
+  section.subsections.forEach(ss => {
+    const ssEl = document.createElement('div');
+    ssEl.className = 'subsection';
+    ssEl.innerHTML = `<div class="subsection-title">${ss.title}</div>`;
+    renderContentBlocks(ssEl, ss.content);
+    panel.appendChild(ssEl);
+  });
+}
+
+// ── CONTENT BLOCK RENDERER ────────────────────────────────────
+function renderContentBlocks(parent, blocks) {
+  if (!blocks || blocks.length === 0) return;
+
+  let listBuffer = [];
+
+  const flushList = () => {
+    if (listBuffer.length === 0) return;
+    const div = document.createElement('div');
+    div.className = 'list-block';
+    listBuffer.forEach(text => {
+      div.innerHTML += `<div class="list-item">${escHtml(text)}</div>`;
+    });
+    parent.appendChild(div);
+    listBuffer = [];
+  };
+
+  blocks.forEach(block => {
+    if (block.type === 'listItem') {
+      listBuffer.push(block.text);
+      return;
+    }
+
+    flushList();
+
+    if (block.type === 'table') {
+      parent.appendChild(renderTable(block.rows));
+      return;
+    }
+
+    if (block.type === 'heading3') {
+      const h = document.createElement('div');
+      h.className = 'h3-label';
+      h.textContent = block.text;
+      parent.appendChild(h);
+      return;
+    }
+
+    if (block.type === 'para') {
+      const p = document.createElement('div');
+      p.className = 'prose';
+      p.textContent = block.text;
+      parent.appendChild(p);
+      return;
+    }
+  });
+
+  flushList();
+}
+
+// ── TABLE RENDERER ────────────────────────────────────────────
+function renderTable(rows) {
+  if (!rows || rows.length === 0) return document.createElement('div');
+
+  // Detect KV table: 2 columns, first col is always a label
+  const isKV = rows.every(r => r.length === 2) && rows.length <= 12;
+
+  if (isKV) {
+    const table = document.createElement('table');
+    table.className = 'kv-table';
+    rows.forEach(([k, v]) => {
+      if (!k && !v) return;
+      table.innerHTML += `<tr><td>${escHtml(k)}</td><td>${formatCellValue(v)}</td></tr>`;
+    });
+    return table;
+  }
+
+  // Multi-column data table
+  const wrap = document.createElement('div');
+  wrap.style.overflowX = 'auto';
+  const table = document.createElement('table');
+  table.className = 'data-table';
+
+  rows.forEach((row, i) => {
+    const tr = document.createElement('tr');
+    row.forEach(cell => {
+      const el = document.createElement(i === 0 ? 'th' : 'td');
+      el.innerHTML = formatCellValue(cell);
+      tr.appendChild(el);
+    });
+    table.appendChild(tr);
+  });
+
+  wrap.appendChild(table);
+  return wrap;
+}
+
+// ── SPECIAL RENDERERS ─────────────────────────────────────────
+
+function renderTimeline(panel, section) {
+  const tl = document.createElement('div');
+  tl.className = 'timeline';
+
+  // Try to render table rows as timeline items
+  section.content.forEach(block => {
+    if (block.type !== 'table') return;
+    block.rows.forEach(([date, phase, desc]) => {
+      if (!date || date === 'Date') return; // skip header row
+      const phaseClass = phase && phase.toLowerCase().includes('live')
+        ? 'live' : phase && phase.toLowerCase().includes('dismantle')
+        ? 'dismantle' : '';
+      const phaseLabel = phase ? `<span class="tl-phase ${
+        phaseClass === 'live' ? 'phase-live' : phaseClass === 'dismantle' ? 'phase-dis' : 'phase-build'
+      }">${escHtml(phase)}</span>` : '';
+
+      tl.innerHTML += `
+        <div class="tl-item">
+          <div class="tl-dot ${phaseClass}"></div>
+          <div class="tl-date">${escHtml(date)}</div>
+          <div class="tl-text">${phaseLabel}${escHtml(desc || '')}</div>
+        </div>`;
+    });
+  });
+
+  if (tl.children.length === 0) renderDefault(panel, section);
+  else panel.appendChild(tl);
+}
+
+function renderSupplierGrid(panel, section) {
+  renderDefault(panel, section); // prose first
+
+  const grid = document.createElement('div');
+  grid.className = 'card-grid';
+
+  section.content.forEach(block => {
+    if (block.type !== 'table') return;
+    block.rows.forEach(([company, service, notes]) => {
+      if (!company || company === 'Company') return;
+      grid.innerHTML += `
+        <div class="card">
+          <div class="card-name">${escHtml(company)}</div>
+          <div class="card-sub">${escHtml(service || '')}</div>
+          ${notes ? `<div class="card-note">${escHtml(notes)}</div>` : ''}
+        </div>`;
+    });
+  });
+
+  // Replace the default table with the card grid
+  const tables = panel.querySelectorAll('.kv-table, .data-table');
+  tables.forEach(t => t.closest('div')?.remove() || t.remove());
+  panel.appendChild(grid);
+}
+
+function renderOnSite(panel, section) {
+  // Dress code gets a special 2-col grid if we spot the H3 labels
+  let dressMode = false;
+  let dressGrid = null;
+  let currentDressCard = null;
+
+  section.subsections.forEach(ss => {
+    const ssEl = document.createElement('div');
+    ssEl.className = 'subsection';
+
+    // "What to wear" subsection → special dress grid
+    if (ss.id.includes('what-to-wear') || ss.id.includes('wear')) {
+      ssEl.innerHTML = `<div class="subsection-title">${escHtml(ss.title)}</div>`;
+      const grid = document.createElement('div');
+      grid.className = 'dress-grid';
+      let card = null;
+
+      ss.content.forEach(block => {
+        if (block.type === 'heading3') {
+          card = document.createElement('div');
+          card.className = 'dress-card';
+          card.innerHTML = `<div class="dress-label">${escHtml(block.text)}</div>`;
+          grid.appendChild(card);
+          return;
+        }
+        if (block.type === 'listItem' && card) {
+          card.innerHTML += `<div class="dress-item">${escHtml(block.text)}</div>`;
+          return;
+        }
+        if (block.type === 'para' && card) {
+          card.innerHTML += `<div class="dress-item">${escHtml(block.text)}</div>`;
+        }
+      });
+
+      ssEl.appendChild(grid);
+    } else {
+      ssEl.innerHTML = `<div class="subsection-title">${escHtml(ss.title)}</div>`;
+      renderContentBlocks(ssEl, ss.content);
+    }
+
+    panel.appendChild(ssEl);
+  });
+}
+
+// ── UTILITIES ─────────────────────────────────────────────────
+function show(state) {
+  ['loading','error','app'].forEach(id => {
+    document.getElementById(id).style.display = id === state ? '' : 'none';
+  });
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function formatCellValue(val) {
+  if (!val) return '';
+  // Auto-link URLs
+  const urlRe = /(https?:\/\/[^\s]+)/g;
+  return escHtml(val).replace(urlRe, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+}
+
+// ── DEMO DATA (shown when API_URL not set) ────────────────────
+const DEMO_DATA = {
+  meta: {
+    documentTitle: 'SXSW London 2026',
+    projectCode: '2614',
+    syncedAt: new Date().toISOString(),
+  },
+  coverMeta: {
+    agency: 'TAIT',
+    client: 'Panarise',
+    dates: '27 May – 07 June 2026',
+    issued: 'v1.2 · 26 May 2026',
+  },
+  sections: [
+    {
+      id: 'event-overview',
+      title: 'Event overview',
+      content: [
+        { type: 'table', rows: [
+          ['Event', 'SXSW London Festival 2026'],
+          ['Client', 'TAIT (Brilliant Stages Ltd) / Panarise'],
+          ['Venue', 'Truman Brewery, Brick Lane, London'],
+          ['Live dates', '1–4 June 2026'],
+          ['Live hours', '0900–1800 (conference) / to 2200 (music & comedy)'],
+          ['OSMO role', 'Production Consultancy & On-Site Management'],
+          ['Project code', '2614'],
+        ]},
+        { type: 'para', text: 'TAIT has engaged OSMO to provide Production Consultancy and On-Site Management Services across all event spaces at the Truman Brewery. This is OSMO\'s second year supporting the TAIT and SXSW London teams.' },
+      ],
+      subsections: [],
+    },
+    {
+      id: 'key-dates-milestones',
+      title: 'Key dates',
+      content: [
+        { type: 'table', rows: [
+          ['Date', 'Phase', 'Description'],
+          ['Thu 28 May', 'Build', 'Venue handover 07:30. All major suppliers load in: plant, containers, TSL truss/lx, TTD, Acorn, HVAC, Illusion, CT AV, Pylon One. Expositionists on site from 12:00.'],
+          ['Fri 29 May', 'Build', 'Structural, AV and scenic installs continue. TSL lx install in BLY. Acorn catering structures.'],
+          ['Sat 30 May', 'Build', 'Ely\'s Yard deliveries and installs. Wild cherry picker. Blonstein/Audio offload. Nooks install.'],
+          ['Sun 31 May', 'Build', 'Ocean Media 12hr screen install at Ely\'s Yard (08:00–20:00). Final build prep and snag.'],
+          ['Mon 1 – Thu 4 Jun', 'Live', 'Live Days 1–4. No Arctic vehicles on site.'],
+          ['Fri 5 – Mon 8 Jun', 'Dismantle', 'Dismantle through to site clear and handback to Truman Brewery.'],
+        ]},
+      ],
+      subsections: [],
+    },
+    {
+      id: 'venue',
+      title: 'Venue',
+      content: [
+        { type: 'table', rows: [
+          ['Venue name', 'Truman Brewery'],
+          ['Address', '91 Brick Lane, London E1 6QL'],
+          ['Crew meeting point', 'Ely\'s Yard'],
+          ['Nearest tube', 'Shoreditch High St (~5 min) · Aldgate East (~8 min)'],
+          ['Parking', 'No public parking — pre-book via master load-in schedule. Vehicle pass required.'],
+        ]},
+      ],
+      subsections: [
+        {
+          id: 'site-notes',
+          title: 'Site notes',
+          content: [
+            { type: 'listItem', text: 'Brick Lane Yard (BLY) — main external yard and primary operations hub' },
+            { type: 'listItem', text: 'U Block — staging, AV, HVAC and truss/lighting zone' },
+            { type: 'listItem', text: 'Ely\'s Yard — exhibition stands, screen and art installation zone' },
+            { type: 'listItem', text: 'F Block — scenic areas' },
+            { type: 'listItem', text: 'G Floor (G1A, G1B, G4, G5) — internal spaces' },
+            { type: 'listItem', text: 'T Floor (T1–T5) — temp structure zones. T3 wall must be completed last.' },
+            { type: 'listItem', text: 'S Floor and Juju\'s — additional operational spaces' },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'on-site',
+      title: 'On site',
+      content: [],
+      subsections: [
+        {
+          id: 'what-to-wear',
+          title: 'What to wear',
+          content: [
+            { type: 'heading3', text: 'Build & dismantle' },
+            { type: 'listItem', text: 'Client or OSMO branded tee / polo, or plain dark top' },
+            { type: 'listItem', text: 'Plain trousers, jeans, or shorts (full thigh)' },
+            { type: 'listItem', text: 'PPE: safety boots + hi-vis jacket + hard hat (overhead work areas)' },
+            { type: 'heading3', text: 'Live days' },
+            { type: 'listItem', text: 'Plain black top or client-branded if issued' },
+            { type: 'listItem', text: 'Black trousers or jeans' },
+            { type: 'listItem', text: 'Black trainers' },
+          ],
+        },
+        {
+          id: 'access-accreditation',
+          title: 'Access & accreditation',
+          content: [
+            { type: 'table', rows: [
+              ['Type', 'Access', 'Issued by', 'Format'],
+              ['Build & Dismantle', 'Full site', 'TAIT — Truman G1B', 'Wristband'],
+              ['Live — Staff', 'FOH + BOH', 'TAIT — Truman G1B', 'Photo badge'],
+            ]},
+          ],
+        },
+        {
+          id: 'expenses',
+          title: 'Expenses',
+          content: [
+            { type: 'heading3', text: 'Permanent employees' },
+            { type: 'listItem', text: 'Follow the Company Expenses Policy' },
+            { type: 'heading3', text: 'Freelancers & suppliers' },
+            { type: 'listItem', text: 'PDs included in PO value' },
+            { type: 'listItem', text: 'Reasonable travel expenses claimable' },
+            { type: 'listItem', text: 'Submit proposed expenses to OSMO post-event for review' },
+            { type: 'listItem', text: 'No alcohol, tobacco or merchandise reimbursed' },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'suppliers-contractors',
+      title: 'Suppliers',
+      content: [
+        { type: 'table', rows: [
+          ['Company', 'Service', 'Notes'],
+          ['5 Star Staffing', 'Local crew', ''],
+          ['TSL', 'Truss & lighting', 'U Block & BLY'],
+          ['TTD', 'Power distribution', 'Mains north–south'],
+          ['Acorn', 'Temporary structures', 'Overflow, catering, art'],
+          ['Illusion', 'Scenic, set & stage', 'U Block, BLY, F Block'],
+          ['Creative Technology', 'Video & audio', 'U Block'],
+          ['Expositionists', 'Exhibition stands', 'Ely\'s Yard, G4, G5, T1'],
+          ['Ocean Media', 'Screen installation', 'Ely\'s Yard, 31 May'],
+          ['Blonstein', 'LED & audio', 'G1A, Ely\'s Yard'],
+          ['Pylon One', 'Network & CCTV', 'U Block / BLY'],
+          ['Events HVAC', 'HVAC', 'U Block'],
+          ['CW Plant Hire', 'Plant & machinery', 'Forklift/plant'],
+          ['Briggs Equipment', 'Forklift hire', '6.5m counterbalance'],
+        ]},
+      ],
+      subsections: [],
+    },
+    {
+      id: 'health-safety',
+      title: 'H&S',
+      content: [
+        { type: 'para', text: 'Refer to the OSMO Health & Safety Plan and Risk Assessment.' },
+        { type: 'para', text: '2614 - SXSW London 2026 - H&S Plan & Risk Assessment v1.pdf' },
+      ],
+      subsections: [],
+    },
+  ],
+};
+
+loadPack();
+</script>
+</body>
+</html>
